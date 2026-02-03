@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thi Trắc Nghiệm Online</title>
+    
+    <link rel="stylesheet" href="css/style1.css">  <!-- gọi lại hàm style trang trí -->    
+    
+    <script> MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } }; </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+
+<div id="timer">⏱️ <span id="countdown">30:00</span></div>
+
+<div class="container">
+    <h1>📝 ĐỀ THI TỰ ĐỘNG HÓA</h1>
+    
+    <div class="info-box">
+        <input type="text" id="fullname" placeholder="Họ và tên học sinh..." required>
+        <input type="text" id="class_name" placeholder="Lớp..." required>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <button id="submit-btn" onclick="submitTest()">NỘP BÀI</button>
+    <div id="notification"></div>
+</div>
+
+<script>
+    // Link Google Script của bạn
+    const googleScriptURL = 'https://script.google.com/macros/s/AKfycbyg5KT1vKt8j-TkjJEQEOxmfj2IOgLbESw8VMyfWoVygXtYsolpiJbf9-imXl8_AB_-_g/exec';
+    
+    // Thời gian làm bài (phút)
+    const TIME_LIMIT = 30;
+
+    // --- DANH SÁCH CÂU HỎI ---
+    // type 1: Trắc nghiệm (4 chọn 1)
+    // type 2: Đúng Sai
+    // type 3: Trả lời ngắn
+    // img: "link_anh.png" (nếu có, không có thì bỏ trống)
+    
+    const questions = [
+        // --- PHẦN 1: TRẮC NGHIỆM ---
+        {
+            type: 1,
+            text: "Câu 1: Tìm  các giá trị của tham số m để biểu thức $f(x)=(m-2)x^2 + 5x + 9$ làm tam thức:",
+            options: [" $m \\in R$", "m = 2", "$m \\neq 2$", "$m \\neq 0$"], // Thứ tự A, B, C, D
+            correct: "C" // Đáp án đúng là C
+        },
+        {
+            type: 1,
+            text: "Câu 2: Cho hàm số bậc hai $y=f(x)$ có đồ thị như hình bên dưới",
+            img: "images/hamsobac2.1.PNG", // Có ảnh thì điền vào đây
+			options: ["$f(x)>0, \\forall x \\in (0;2)$", "$f(x)<0, \\forall x \\in (0; 2)$", "$f(x)>0, \\forall x \\in (1; + \\infty )$", "$f(x)<0, \\forall x \\in [0;2]$"],
+            correct: "B"
+        },
+        {
+            type: 1,
+            text: "Câu 3: Bất phương trình $x^2 - 3x - 4 \\leq 0$ có bao nhiêu nghiệm dương",
+           
+            options: ["6", "$5$", "$4$", "$2$"],
+            correct: "C"
+        },
+        {
+            type: 1,
+            text: "Câu 4: Tập xác định của hàm số $y=\\sqrt{x-1}+2.\\sqrt{9-x^2}$",
+            options: ["[1;3]", "$[1;+\\infty]$", "$[-3;3]$", "$[3;+\\infty)$"],
+            correct: "A"
+        },
+		{
+			type:1,
+			text: "Câu 5: Tập xác định của hàm số $y=\\dfrac{\\sqrt{9-x}}{\\sqrt{x-1}+\\sqrt{4-x^2}+10}$",
+			options: ["[1;2]","$[2; \\infty)$","[1;9]", "[1;2)"],
+			correct: "A"
+		},
+		{
+			type:1,
+			text: "Câu 6: Số nghiệm nguyên của bất phương trình $(x^2-2x)(x^2-9) \\leq 0$",
+			options: ["vô số","$0$","5", "7"],
+			correct: "D"
+		},
+		{
+			type:1,
+			text: "Câu 7: Có bao nhiêu số nguyên thoả mãn bất phương trình $\\dfrac{x^2}{x-2} \\leq x+1$",
+			options: ["4","$5$","3", "2"],
+			correct: "A"
+		},
+		{
+            type: 1, // trong string thì gấp đôi \ lên so với latex
+            text: "Câu 8: Cho tam thức bậc hai $\\begin{cases} \\dfrac{x-1}{\\sqrt{2-x}-1} \\quad  \\text{khi} \\quad x < 1 \\\\ -2x \\quad  \\text{khi} \\quad x \\geq 1 \\end{cases}$",
+            options: ["$ f(x)>0, \\forall x \\in R <=> \\begin{cases} a<0 \\\\ \\Delta <0 \\end{cases}$ ",
+			         "$ f(x)>0, \\forall x \\in R <=> \\begin{cases} a<0 \\\\ \\Delta \\leq 0 \\end{cases}$", 
+					 "$ f(x)>0, \\forall x \\in R <=> \\begin{cases} a>0 \\\\ \\Delta >0 \\end{cases}$", 
+					 "$ f(x)>0, \\forall x \\in R <=> \\begin{cases} a>0 \\\\ \\Delta <0 \\end{cases}$"],
+            correct: "D"
+        },
+		{
+			type:1,
+			text: "Câu 9: Tập hợp các giá trị của tham số m để phương trình $x^2 -mx + m = 0$ có hai nghiệm phân biệt là",
+			options: ["$(-\\infty;0) \\cup (4;+\\infty)$","$(0;4)$","$(-\\infty; 0] \\cup [4;\\infty)$", "[0;4]"],
+			correct: "A"
+		},
+		{
+			type:1,
+			text: "Câu 10: Tập hợp các giá trị của tham số m để hàm số $y=\\sqrt{x^2-4x-m^2+5m}$ xác định trên R là",
+			options: ["$(-\\infty;1) \\cup (4;+\\infty)$","$(1;4)$","$[1;4]$", "[-1;1]"],
+			correct: "C"
+		},
+		
+        // Muốn thêm câu hỏi? Copy khối trên và dán xuống dưới
+
+        // --- PHẦN 2: ĐÚNG SAI ---
+        {
+            type: 2,
+            text: "Câu 1:Cho  Parabol $y^2 -4x+3$. Xét tính đúng sai của các mệnh đề sau",
+           	sub_questions: [
+                "a) trục đối xứng của đồ thị hàm số là đường x = 2.",
+                "b) toạ độ đỉnh của Parabol là I(2;-3).",
+                "c) Giá trị nhỏ nhất của hàm số là -2.",
+                "d) Parabol cắt Ox tại hai điểm A,B. Khi đó diện tích của tam giác IAB là 1."
+            ],
+            correct: ["true", "false", "false", "true"] // Đáp án cho a, b, c, d
+        },
+        {
+            type: 2,
+            text: "Câu 2: Một doanh nghiệp tư nhân A chuyên kinh doanh xe gắn máy các loại. Hiện nay doanh nghiệp đang tập trung chiến lược vào kinh doanh xe hon đa Future Fi với chi phí mua vào một chiếc là 28 và bán ra với giá là 32 triệu đồng. Với giá bán này thì số lượng xe mà khách hàng sẽ mua trong một năm là 650 chiếc. Nhằm mục tiêu đẩy mạnh hơn nữa lượng tiêu thụ dòng xe đang ăn khách này, doanh nghiệp dự định giảm giá bán và ước tính rằng nếu giảm 1 triệu đồng mỗi chiếc xe thì số lượng xe bán ra trong một năm là sẽ tăng thêm 200 chiếc. Gọi x đồng là số tiền mà doanh nghiệp A dự định giảm giá và T là lợi nhuận mà doanh nghiệp thu được trong một năm. Khi đó:",
+            sub_questions: [
+                "a) lợi nhuận thu được khi bán một chiếc xe là 4 - x.",
+                "b) số xe mà doanh nghiệp sẽ bán được trong một năm là 650 - 200x.",
+                "c) Lợi nhuận mà doanh nghiệp thu được trong một năm là $T=-200x^2 +200x+2600$.",
+                "d) Giá mới của chiếc xe là 31,5 triệu đồng thì lợi nhuận thu được là cao nhất."
+            ],
+            correct: ["true", "true", "false", "true"] // Đáp án cho a, b, c, d
+        },
+
+        // --- PHẦN 3: TRẢ LỜI NGẮN ---
+        {
+            type: 3,
+            text: "Câu 1: Có tất cả bao nhiêu giá trị nguyên của tham số m để bất phương trình $\\dfrac{x^2+(m+1)x+1}{x^2+2x+5} \\geq 0$ nghiệm đúng với mọi $x\\in R$",
+            correct: "5" // Đáp án (máy sẽ tự viết thường, xóa dấu cách thừa)
+        },
+		{
+            type: 3,
+            text: "Câu 2: Có tất cả bao nhiêu giá trị nguyên của tham số $m \\in [0;2022]$ để $\\forall x \\in [2; 4]$ đều là nghiệm bất phương trình $x^2 -(m+1)x+m \\leq 0$",
+            correct: "2019" // Đáp án (máy sẽ tự viết thường, xóa dấu cách thừa)
+        }
+    ];
+
+</script>
+
+<script src="script/script1.js"></script>  <!-- gọi lại hàm script các thứ trang trí -->
+
+</body>
+</html>
